@@ -5,12 +5,11 @@ from controller import NewCommandMessage
 
 from net import RaftNet
 
-def console(nodenum):
-    net = RaftNet(nodenum)
-    # Thread(target=net.receive).start()
+def console():
+    net = RaftNet()
 
     while True:
-        cmd = input(f"Node {nodenum} > ")
+        cmd = input(f"> ")
         message = cmd.split()
         dest = message.pop(0)
         cmd = message.pop(0)
@@ -18,8 +17,8 @@ def console(nodenum):
             message = NewCommandMessage(' '.join(message))
         else:
             print("invalid command")
-        net.send(int(dest), pickle.dumps(message))
+        print(net.send(int(dest), pickle.dumps(message)))
 
 if __name__ == '__main__':
     import sys
-    console(int(sys.argv[1]))
+    console()

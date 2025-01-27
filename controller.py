@@ -133,6 +133,7 @@ class RaftController:
             msg.prev_log_term,
             msg.entries
         )
+
         # commit_index for a follower is the min of last_applied and the leader commit index
         self.commit_index = min(msg.leader_commit_index, self.last_applied)
 
@@ -151,11 +152,6 @@ class RaftController:
         self.update_last_applied(msg.nodenum, msg.last_applied_index)
 
         if msg.last_applied_index == self.last_applied:
-            return
-
-        newer_term_returned = False
-        if newer_term_returned:
-            self.become_follower()
             return
 
         if (self.leader 
@@ -241,6 +237,7 @@ class RaftController:
             return False
         entry = LogEntry(term=self.term, command=msg.command)
         success = self.append_entry(entry)
+        print(f"{self.nodenum}: {self.log.log_entries}")
         if success:
             # 0 indexed but also we just added to the log.
             prev_idx = len(self.log.log_entries) - 2

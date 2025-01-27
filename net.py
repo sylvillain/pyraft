@@ -1,3 +1,4 @@
+import random
 from threading import Thread
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 from message import send_message, recv_message
@@ -6,11 +7,12 @@ from config import SERVERS
 from kvserver import KVServer
 
 class RaftNet:
-    def __init__(self, nodenum:int):
+    def __init__(self, nodenum:int=None):
         # My own address
         self.nodenum = nodenum
-        self.addr = SERVERS[nodenum]
-        self.kv = KVServer(snapshot_dir=f"snapshots{self.nodenum}")
+        self.addr = SERVERS.get(nodenum)
+        if self.addr is None:
+            self.addr = ('localhost', random.randint(20000,20100))
 
         self.sock = socket(AF_INET, SOCK_STREAM)
         self.sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, True)
@@ -36,7 +38,7 @@ class RaftNet:
             pass
         finally:
             sock.close()
-        return True
+        return response
 
     # Receive and return any message that was sent to me
     def receive(self, handle_message=None) -> bytes:
@@ -46,8 +48,10 @@ class RaftNet:
                     msg = recv_message(sock)
                     if handle_message:
                         resp = handle_message(msg)
+                        print(f"handle message: {resp}")
                     else:
                         resp = self.kv.handle_message(msg)
+                        print(f"kv handle: {resp}")
                     send_message(sock, resp)
             except IOError:
                 sock.close()

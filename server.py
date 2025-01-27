@@ -29,7 +29,6 @@ class RaftServer:
                 self.controller.handle_incoming()
             except Exception as e:
                 pass
-                # print(e)
 
     def handle_outgoing(self):
         while True:
@@ -47,7 +46,6 @@ class RaftServer:
         msg = pickle.loads(msg)
 
         resp = self.controller.receive(msg)
-        # print(msg)
 
         if resp:
             return b'ok'
