@@ -23,16 +23,11 @@ class RaftNet:
     def send(self, destination: int, message:bytes):
         addr = SERVERS.get(destination)
 
-        # if destination == self.nodenum or not addr:
-            # print('invalid destination', destination)
-            # return
-
         try:
             sock = socket(AF_INET, SOCK_STREAM)
             sock.connect(addr)
             send_message(sock, message)       
             response = recv_message(sock)
-            # print(response)
 
         except Exception as e:
             pass
@@ -48,16 +43,13 @@ class RaftNet:
                     msg = recv_message(sock)
                     if handle_message:
                         resp = handle_message(msg)
-                        print(f"handle message: {resp}")
                     else:
                         resp = self.kv.handle_message(msg)
-                        print(f"kv handle: {resp}")
                     send_message(sock, resp)
             except IOError:
                 sock.close()
 
         while True:
             client, addr = self.sock.accept()
-            # print('Connection from:', addr)
             Thread(target=handle_messages, args=[client, handle_message]).start()
 

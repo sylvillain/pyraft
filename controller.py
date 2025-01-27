@@ -277,28 +277,20 @@ class RaftController:
 
     def update_last_applied(self, nodenum, n):
         self._last_applied_indexes[nodenum] = n
-        # TODO: this probably needs to get changed...
 
-        # You cannot change the commit index unless the log matches the current term
         try:
+            # You cannot change the commit index unless the log matches the current term
             commit_index = min(sorted(self.last_applied_indexes.values(), reverse=True)[:3])
             if self.log.log_entries[commit_index].term == self.term:
                 self.commit_index = commit_index
         except Exception as e:
             print(e)
 
-    def update_follower(self, nodenum):
-        pass
-
     def send(self, msg):
-        self.outgoing_messages.put(msg)
-        return True
-        # return self.handle_message(msg)
+        return self.queue_outgoing_message(msg)
 
     def receive(self, msg):
-        self.incoming_messages.put(msg)
-        return True
-        # return self.handle_message(msg)
+        return self.queue_incoming_message(msg)
 
     def handle_incoming(self):
         msg = self.incoming_messages.get()
@@ -306,6 +298,16 @@ class RaftController:
 
     def handle_outgoing(self):
         return self.outgoing_messages.get()
+
+    def queue_incoming_message(self, msg):
+        if isinstance(msg, NewCommandMessage) and self.role != 'LEADER':
+            return b'command sent to node that is not leader'
+        self.incoming_messages.put(msg)
+        return True
+
+    def queue_outgoing_message(self, msg):
+        self.outgoing_messages.put(msg)
+        return True
 
     def become_leader(self):
         self.role = 'LEADER'
@@ -334,7 +336,6 @@ class RaftController:
         except Exception as e:
             print(e)
         self.send(msg)
-        # self.reset_timeout()
 
     def become_follower(self):
         self.role = 'FOLLOWER'

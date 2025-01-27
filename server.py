@@ -33,21 +33,18 @@ class RaftServer:
     def handle_outgoing(self):
         while True:
             msg = self.controller.handle_outgoing()
-            # for nodenum in [2, 3, 4, 5]:
-            # TODO: this probably needs to change
+            # Fan out requests to every node.
             for nodenum in [1, 2, 3, 4, 5]:
                 if nodenum != self.nodenum:
-                # self.send(nodenum, msg)
                     Thread(target=self.send, args=[nodenum, msg]).start()
 
 
     def handle_message(self, msg):
-        # Should this parse stuff out our should that be somewhere else?
         msg = pickle.loads(msg)
-
         resp = self.controller.receive(msg)
-
-        if resp:
+        if isinstance(resp, bytes):
+            return resp
+        elif resp:
             return b'ok'
         else:
             return b'fail'
@@ -57,23 +54,6 @@ class RaftServer:
 
     def receive(self, msg):
         self.net.receive(msg)
-
-    # TODO: probably don't need this
-    def update_follower(self, nodenum):
-        # TODO: probably need to work backwards
-        for idx, log in enumerate(self.log[1:]):
-
-            # TODO: doesn't track terms and such
-            msg = AppendEntriesMessage(
-                idx, 
-                # TODO: factor into function?
-                self.controller.log.log_entries[idx].term,
-                [log],
-                0 # this will need to change for conflict resolution
-            )
-
-            self.send(nodenum, msg)
-
 
 
 def clock(controller):
