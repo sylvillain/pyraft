@@ -8,7 +8,7 @@ from threading import Thread
 
 
 class KVServer:
-    def __init__(self, snapshot_dir='snapshots'):
+    def __init__(self, snapshot_dir="snapshots"):
         self.snapshot_dir = snapshot_dir
         self.db = {}
         self.commands = {
@@ -16,7 +16,7 @@ class KVServer:
             "get": self.get,
             "delete": self.delete,
             "snapshot": self.snapshot,
-            "restore": self.restore, 
+            "restore": self.restore,
         }
 
         self.debug = {
@@ -31,7 +31,7 @@ class KVServer:
 
     def _parse_message(self, msg):
         # TODO: handle non byte-string?
-        data = msg.decode('utf-8').strip().split(' ')
+        data = msg.decode("utf-8").strip().split(" ")
         if data and any(data[0] == cmd for cmd in self.commands):
             resp, err = self.commands[data[0]](data[1:])
 
@@ -52,7 +52,7 @@ class KVServer:
             print(args)
             return b"SET needs at least 2 arguments", True
 
-        key, value = args[0], ' '.join(args[1:])
+        key, value = args[0], " ".join(args[1:])
         self.db[key] = value
 
         print(self.db)
@@ -70,7 +70,7 @@ class KVServer:
         except KeyError:
             return f"{key} not found".encode(encoding="utf-8"), True
 
-        return resp.encode(encoding='utf-8'), False
+        return resp.encode(encoding="utf-8"), False
 
     def delete(self, args):
         if not args:
@@ -83,7 +83,7 @@ class KVServer:
         except KeyError:
             return f"{key} not found".encode(encoding="utf-8"), True
 
-        return b'OK', False
+        return b"OK", False
 
     def snapshot(self, args):
         if not os.path.isdir(self.snapshot_dir):
@@ -95,7 +95,7 @@ class KVServer:
         filename = f"{args[0]}.json"
 
         try:
-            with open(os.path.join(self.snapshot_dir, filename), 'w') as f:
+            with open(os.path.join(self.snapshot_dir, filename), "w") as f:
                 f.write(json.dumps(self.db))
         except Exception as e:
             print(e)
@@ -125,11 +125,12 @@ class KVServer:
         self.cmd_log.append(msg)
 
     def keys(self):
-        return json.dumps(self.db).encode('utf-8')
+        return json.dumps(self.db).encode("utf-8")
 
     def log(self):
-        return json.dumps(self.cmd_log).encode('utf-8')
-        
+        return json.dumps(self.cmd_log).encode("utf-8")
+
+
 def main(addr):
 
     KV = KVServer()
@@ -149,10 +150,10 @@ def main(addr):
     sock.listen()
     while True:
         client, addr = sock.accept()
-        print('Connection from:', addr)
+        print("Connection from:", addr)
         Thread(target=handle_messages, args=[client]).start()  # <<<
+
 
 if __name__ == "__main__":
     print("Starting kvserver...")
-    main(('localhost', 16000))
-
+    main(("localhost", 16000))
